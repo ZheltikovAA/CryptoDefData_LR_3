@@ -59,13 +59,16 @@ namespace CryptoDefData_LR_3
                 if (selectedCertificates.Count > 0)
                 {
                     selectedCertificate = selectedCertificates[0];
-                    MessageBox.Show($"Выбран сертификат:\n\nSubject: {selectedCertificate.Subject}");
+                    MessageBox.Show($"Выбран сертификат:\n\nCN: {selectedCertificate.GetNameInfo(X509NameType.SimpleName, false)}");
                     ChangeFlag(true);
-                    UserName.Text = selectedCertificate.Subject.ToString();
+                    UserName.Text = selectedCertificate.GetNameInfo(X509NameType.SimpleName, false);
+                        //Subject.ToString();
+                    TextSquare.Document.Blocks.Clear();
                 }
                 else
                 {
                     MessageBox.Show("Сертификат не выбран.");
+                    TextSquare.Document.Blocks.Clear();
                 }
                 CertificateStore.Close();
             }
@@ -91,29 +94,39 @@ namespace CryptoDefData_LR_3
                 return;
             }
 
-            //if (document.VerifyChain()) 
-            //{
+            if (document.VerifyChain()) 
+            {
                 if (document.VerifySign()) 
                 {
                     signDocument = document;
-                    this.Title = "Подписано: " + signDocument.certificate.Subject;
+                    this.Title = "Подписано: " + signDocument.certificate.GetNameInfo(X509NameType.SimpleName, false);
                     TextRange lenContent = new TextRange(TextSquare.Document.ContentStart, TextSquare.Document.ContentEnd);
                     lenContent.Text = signDocument.contentDoc;
                 } else { MessageBox.Show("Ошибка при проверке целостности документа"); return; }
 
-            //}
-            //else { MessageBox.Show("Ошибка при проверке цепочки сертификации"); return; }
+            }
+            else { MessageBox.Show("Ошибка при проверке цепочки сертификации"); return; }
         }
 
         private void SaveDocMenuClick(object sender, RoutedEventArgs e)
         {
-            SaveFileDialog save = new SaveFileDialog();
-            save.FileName = "Message";
-            if (save.ShowDialog() == false) return;
-            TextRange lenContent = new TextRange(TextSquare.Document.ContentStart, TextSquare.Document.ContentEnd);
-            signDocument = new SignDocument(selectedCertificate, lenContent.Text);
-            signDocument.SaveInFile(save.FileName);
-            this.Title = "Подписанный документ:" + signDocument.certificate.Subject;
+            
+            try
+            {
+                SaveFileDialog save = new SaveFileDialog();
+                save.FileName = "Message";
+                if (save.ShowDialog() == false) return;
+                TextRange lenContent = new TextRange(TextSquare.Document.ContentStart, TextSquare.Document.ContentEnd);
+                signDocument = new SignDocument(selectedCertificate, lenContent.Text);
+                signDocument.SaveInFile(save.FileName);
+                this.Title = "Подписанный документ:" + signDocument.certificate.Subject;
+            }
+            catch (Exception ex) 
+            {
+                MessageBox.Show($"Ошибка при сохранении нового документа: {ex.Message}");
+            }
+            
+            
         }
 
         private void CreateDocMenuClick(object sender, RoutedEventArgs e)
@@ -131,7 +144,7 @@ namespace CryptoDefData_LR_3
 
         private void ExitMenuClick(object sender, RoutedEventArgs e)
         {
-            CertificateStore.Close(); 
+            CertificateStore.Close();
             Close();
         }
 
@@ -151,6 +164,7 @@ namespace CryptoDefData_LR_3
                 MessageBox.Show("Сертификат успешно удален.");
                 selectedCertificate = null;
                 UserName.Text = "";
+                TextSquare.Document.Blocks.Clear();
                 ChangeFlag(false);
             }
             catch(Exception ex) 

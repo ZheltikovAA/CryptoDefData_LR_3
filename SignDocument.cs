@@ -56,7 +56,7 @@ namespace CryptoDefData_LR_3
             byte[] txt = Encoding.UTF8.GetBytes(text);
             byte[] hash = new SHA1Managed().ComputeHash(txt);
 
-            var dsacsp = (DSACryptoServiceProvider)cert.PrivateKey;
+            DSACryptoServiceProvider dsacsp = (DSACryptoServiceProvider)cert.PrivateKey;
 
             esign = dsacsp.SignHash(hash, "SHA1");
         }
@@ -72,7 +72,7 @@ namespace CryptoDefData_LR_3
         public bool VerifySign()
         {
             byte[] hash = new SHA1Managed().ComputeHash(Encoding.UTF8.GetBytes(contentDoc));
-            var dsacsp = (DSACryptoServiceProvider)certificate.PublicKey.Key;
+            DSACryptoServiceProvider dsacsp = (DSACryptoServiceProvider)certificate.PublicKey.Key;
 
             if(!dsacsp.VerifyHash(hash, "SHA1", esign)) { return false; }
             return true;
